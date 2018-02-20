@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -30,19 +31,10 @@ public class LoadHandler {
         if (removed || !priceUpdatesQueue.contains(priceUpdate)) {
             priceUpdatesQueue.add(priceUpdate);
         }
-        /*
-         * PriceUpdate existingPrice =
-         * priceUpdates.get(priceUpdate.getCompanyName());
-         * 
-         * if (existingPrice != null && existingPrice.getPrice() <
-         * priceUpdate.getPrice()) {
-         * priceUpdates.put(priceUpdate.getCompanyName(), priceUpdate); } else
-         * if (existingPrice == null) {
-         * priceUpdates.put(priceUpdate.getCompanyName(), priceUpdate); }
-         */
 
     }
 
+    @Scheduled(fixedRate = 1000)
     public void sendMessages() {
 
         int limit = priceUpdatesQueue.size() < MAX_PRICE_UPDATES ? priceUpdatesQueue.size() : MAX_PRICE_UPDATES;
@@ -52,19 +44,9 @@ public class LoadHandler {
             list.add(priceUpdatesQueue.poll());
         }
 
-        jmsTemplate.convertAndSend("stockPrice", list);
-        /*
-         * priceUpdatesQueue.stream().collect(Collectors.toCollection(LinkedList
-         * ::new));
-         * 
-         * LinkedList<PriceUpdate> priceList =
-         * priceUpdates.values().stream().collect(); if (priceList.size() >
-         * MAX_PRICE_UPDATES) { jmsTemplate.convertAndSend("stockPrice",
-         * priceList.subList(priceUpdates.size() - MAX_PRICE_UPDATES,
-         * priceUpdates.size())); } else {
-         * jmsTemplate.convertAndSend("stockPrice", priceList); }
-         * priceUpdates.clear();
-         */
+        if (list.size() > 0) {
+            jmsTemplate.convertAndSend("stockPrice", list);
+        }
     }
 
 }

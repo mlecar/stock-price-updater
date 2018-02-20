@@ -26,8 +26,6 @@ public class Producer extends Thread {
             loadHandler.receive(new PriceUpdate("Google", 160.71));
             loadHandler.receive(new PriceUpdate("Facebook", 91.63));
         }
-
-        loadHandler.sendMessages();
     }
 
 }
