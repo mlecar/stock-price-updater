@@ -1,7 +1,8 @@
 package com.mlc.stock.price.updater;
 
-import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,16 +13,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoadHandler {
 
-    @Value("${stock.max.price.updates:100}")
-    private static int MAX_PRICE_UPDATES;
+    @Value("${stock.max.price.updates}")
+    private int MAX_PRICE_UPDATES;
 
     private ConcurrentLinkedQueue<PriceUpdate> priceUpdatesQueue;
+    private ConcurrentHashMap<String, PriceUpdate> priceUpdates;
 
     @Autowired
     private JmsTemplate jmsTemplate;
 
     public LoadHandler() {
         priceUpdatesQueue = new ConcurrentLinkedQueue<>();
+        priceUpdates = new ConcurrentHashMap<>();
     }
 
     public void receive(PriceUpdate priceUpdate) {
@@ -37,13 +40,13 @@ public class LoadHandler {
 
         int limit = priceUpdatesQueue.size() < MAX_PRICE_UPDATES ? priceUpdatesQueue.size() : MAX_PRICE_UPDATES;
 
-        LinkedList<PriceUpdate> list = new LinkedList<>();
         for (int i = 0; i < limit; i++) {
-            list.add(priceUpdatesQueue.poll());
+            PriceUpdate priceUpdate = priceUpdatesQueue.poll();
+            priceUpdates.put(priceUpdate.getCompanyName(), priceUpdate);
         }
 
-        if (list.size() > 0) {
-            jmsTemplate.convertAndSend("stockPrice", list);
+        if (priceUpdates.size() > 0) {
+            jmsTemplate.convertAndSend("stockPrice", priceUpdates.values().parallelStream().collect(Collectors.toList()));
         }
     }
 

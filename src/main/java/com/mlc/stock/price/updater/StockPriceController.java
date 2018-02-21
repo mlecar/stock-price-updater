@@ -24,7 +24,7 @@ public class StockPriceController {
     private LoadHandler loadHandler;
 
     @ResponseBody
-    @PutMapping(value = { "/add/{companyName}/price/{price:.*}/", "/stock/{companyName}/price/{price:.*}" }, produces = { "application/json" })
+    @PutMapping(value = { "/add/{companyName}/price/{price:.*}/", "/add/{companyName}/price/{price:.*}" }, produces = { "application/json" })
     public ResponseEntity<String> transactions(@Valid @PathVariable String companyName, @Valid @PathVariable Double price) {
 
         loadHandler.receive(new PriceUpdate(companyName, price));
@@ -33,7 +33,7 @@ public class StockPriceController {
     }
 
     @ResponseBody
-    @PutMapping(value = { "/" }, consumes = { "application/json" }, produces = { "application/json" })
+    @PutMapping(consumes = { "application/json" }, produces = { "application/json" })
     public ResponseEntity<String> transactions(@Valid @RequestBody String body) {
 
         PriceUpdate[] prices = new Gson().fromJson(body, PriceUpdate[].class);
@@ -46,7 +46,7 @@ public class StockPriceController {
     }
 
     @ResponseBody
-    @PutMapping(value = { "/generateUpdates" }, consumes = { "application/json" }, produces = { "application/json" })
+    @PutMapping(value = { "/generateUpdates" }, produces = { "application/json" })
     public ResponseEntity<String> generateUpdates() {
 
         for (int i = 1; i < 100; i++) {
