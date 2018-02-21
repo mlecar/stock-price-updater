@@ -1,4 +1,4 @@
-package exercise;
+package com.mlc.stock.price.updater;
 
 import java.io.Serializable;
 

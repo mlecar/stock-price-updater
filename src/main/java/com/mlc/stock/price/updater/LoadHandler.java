@@ -1,10 +1,10 @@
-package exercise;
+package com.mlc.stock.price.updater;
 
 import java.util.LinkedList;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -12,26 +12,24 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoadHandler {
 
-    private static final int MAX_PRICE_UPDATES = 100;
-    private final ConcurrentHashMap<String, PriceUpdate> priceUpdates;
+    @Value("${stock.max.price.updates:100}")
+    private static int MAX_PRICE_UPDATES;
+
     private ConcurrentLinkedQueue<PriceUpdate> priceUpdatesQueue;
 
     @Autowired
     private JmsTemplate jmsTemplate;
 
     public LoadHandler() {
-        priceUpdates = new ConcurrentHashMap<>();
         priceUpdatesQueue = new ConcurrentLinkedQueue<>();
     }
 
     public void receive(PriceUpdate priceUpdate) {
-
-        boolean removed = priceUpdatesQueue.removeIf(p -> p.getCompanyName().equals(priceUpdate.getCompanyName()) && p.getPrice() < priceUpdate.getPrice());
+        boolean removed = priceUpdatesQueue.removeIf(p -> p.getCompanyName().equals(priceUpdate.getCompanyName()));
 
         if (removed || !priceUpdatesQueue.contains(priceUpdate)) {
             priceUpdatesQueue.add(priceUpdate);
         }
-
     }
 
     @Scheduled(fixedRate = 1000)
